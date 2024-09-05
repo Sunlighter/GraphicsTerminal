@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PackageProjectUrl>https://github.com/Sunlighter/GraphicsTerminal</PackageProjectUrl>
+    <Description>Graphics Terminal Library</Description>
+    <PackageId>Sunlighter.GraphicsTerminalLib</PackageId>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <AssemblyName>Sunlighter.GraphicsTerminalLib</AssemblyName>
+    <Product>Sunlighter.GraphicsTerminalLib</Product>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Sunlighter.OptionLib" Version="1.0.0" />
+  </ItemGroup>
+
+</Project>
