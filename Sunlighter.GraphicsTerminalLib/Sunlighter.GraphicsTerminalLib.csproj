@@ -11,10 +11,14 @@
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <AssemblyName>Sunlighter.GraphicsTerminalLib</AssemblyName>
     <Product>Sunlighter.GraphicsTerminalLib</Product>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Sunlighter.OptionLib" Version="1.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="\"/>
+  </ItemGroup>
 </Project>
