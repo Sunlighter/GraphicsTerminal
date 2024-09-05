@@ -52,8 +52,8 @@ In the `Main` function, you can construct a `Sunlighter.GraphicsTerminalLib.Grap
 operator. (Usually you would use `await using` for this object.) It runs as its own window in its own thread. The
 only constructor argument is the title for the window.
 
-You would not generally want to create two of these objects (because your thread can only wait for an event from one
-of them at a time), but you could possibly create multiple threads, each of which has its own terminal object. These
+You would not generally want to create two of these objects (because your task can only wait for an event from one of
+them at a time), but you could possibly create multiple tasks, each of which has its own terminal object. These
 terminal objects would appear as unrelated windows on the screen.
 
 The terminal has only a few simple functions.
