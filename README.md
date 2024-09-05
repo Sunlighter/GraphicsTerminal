@@ -113,7 +113,7 @@ it when appropriate.
 
 It is also possible you will get back a `TE_UserCloseRequest`.
 
-### ShowBusyForm
+### ShowBusyFormAsync
 
 The terminal window doesn&rsquo;t use the hourglass icon, because the assumption is that the controlling thread will
 spend most of its time waiting for `GetEventAsync` or `GetBigTextAsync`, and flickering is undesirable.
@@ -121,9 +121,9 @@ spend most of its time waiting for `GetEventAsync` or `GetBigTextAsync`, and fli
 If your main thread is going to do something that keeps it busy for a while, you might want to put up a busy form, so
 that the user knows what to expect.
 
-`ShowBusyForm` takes a `busyDoing` string describing what the program is busy doing (e.g., &ldquo;Working...&rdquo;),
-an optional `progressAmount` (which is shown in the progress bar, or if unspecified, the progress bar is put in
-&ldquo;Marquee&rdquo; mode), and an optional `CancellationTokenSource` called `cts`.
+`ShowBusyFormAsync` takes a `busyDoing` string describing what the program is busy doing (e.g.,
+&ldquo;Working...&rdquo;), an optional `progressAmount` (which is shown in the progress bar, or if unspecified, the
+progress bar is put in &ldquo;Marquee&rdquo; mode), and an optional `CancellationTokenSource` called `cts`.
 
 If you provide the `CancellationTokenSource`, a `Cancel` button will be displayed, and if the user clicks the button,
 it will be disabled (to indicate to the user that the cancellation is now in progress) and the cancellation token will
@@ -131,14 +131,14 @@ be cancelled.
 
 If you do not provide a `CancellationTokenSource`, the `Cancel` button is not displayed.
 
-The `ShowBusyForm` function is `async` but returns &ldquo;immediately,&rdquo; as soon as the terminal has started
+The `ShowBusyFormAsync` function is `async` but returns &ldquo;immediately,&rdquo; as soon as the terminal has started
 displaying the busy status.
 
-You can call `ShowBusyForm` again to update progress.
+You can call `ShowBusyFormAsync` again to update progress.
 
 To get rid of the busy form, call any of the other terminal functions.
 
-### ShowDialog
+### ShowDialogAsync
 
 This function allows you to show an arbitrary modal dialog; you pass a function and it passes your function a
 `IWin32Window` object to serve as a parent for the dialog. This way you can use common dialogs such as
@@ -156,3 +156,8 @@ causes the terminal window to immediately close. Usually you should arrange for 
 
 Behavior is undefined if two or more threads or tasks try to use the same graphics terminal at the same time. However,
 it is safe to pass a graphics terminal from one thread or task to another.
+
+**Breaking Change.** In version 1.0.0, the functions `ShowBusyFormAsync` and `ShowDialogAsync` were incorrectly named
+`ShowBusyForm` and `ShowDialog`. The functionality was the same. I detected this misnaming after a few hours, and even
+though a renaming like this is a breaking change, I released the fix as version 1.0.1 (instead of 2.0.0 as Semantic
+Versioning would have required), because 1.0.0 was only out there for a few hours. I recommend not using 1.0.0.

@@ -106,7 +106,7 @@ namespace GraphicsTerminalConsoleTest
                     }
                     else if (kc == Keys.B)
                     {
-                        DialogResult dr = await terminal.ShowDialog<DialogResult>
+                        DialogResult dr = await terminal.ShowDialogAsync<DialogResult>
                         (
                             parent =>
                             {
@@ -140,7 +140,7 @@ namespace GraphicsTerminalConsoleTest
             using CancellationTokenSource cts = new();
             for (int i = 0; i < 20; ++i)
             {
-                await terminal.ShowBusyForm
+                await terminal.ShowBusyFormAsync
                 (
                     "Testing busy dialog...",
                     Option<double>.Some(i / 20.0),
@@ -152,7 +152,7 @@ namespace GraphicsTerminalConsoleTest
                 if (cts.IsCancellationRequested) break;
             }
 
-            await terminal.ShowBusyForm
+            await terminal.ShowBusyFormAsync
             (
                 "Not cancellable...",
                 Option<double>.None,

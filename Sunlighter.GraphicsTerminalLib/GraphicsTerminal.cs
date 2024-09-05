@@ -76,7 +76,7 @@ namespace Sunlighter.GraphicsTerminalLib
             return ((ReceivedItem<TerminalEvent>)te).Item;
         }
 
-        public async Task ShowBusyForm
+        public async Task ShowBusyFormAsync
         (
             string busyDoing,
             Option<double> progressAmount,
@@ -88,7 +88,7 @@ namespace Sunlighter.GraphicsTerminalLib
             System.Diagnostics.Debug.Assert(te is ReceivedItem<TerminalEvent> ri && ri.Item is TE_BusyDisplayed);
         }
 
-        public async Task<T> ShowDialog<T>
+        public async Task<T> ShowDialogAsync<T>
         (
             Func<IWin32Window, T> dialogFunc
         )
