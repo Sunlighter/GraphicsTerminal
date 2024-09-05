@@ -49,7 +49,8 @@ You can then add the `Sunlighter.GraphicsTerminalLib` NuGet package.
 Make sure your `Main` function is `async`.
 
 In the `Main` function, you can construct a `Sunlighter.GraphicsTerminalLib.GraphicsTerminal` object with the `new`
-operator. (Usually you would use `async using` for this object.) It runs as its own window in its own thread.
+operator. (Usually you would use `async using` for this object.) It runs as its own window in its own thread. The
+only constructor argument is the title for the window.
 
 You would not generally want to create two of these objects (because your thread can only wait for an event from one
 of them at a time), but you could possibly create multiple threads, each of which has its own terminal object. These

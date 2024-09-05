@@ -1,17 +1,21 @@
 ﻿using Sunlighter.SimpleChannelLib;
 using Sunlighter.OptionLib;
 using System.Xml.Schema;
+using System.Reflection;
 
 namespace Sunlighter.GraphicsTerminalLib
 {
     public sealed class GraphicsTerminal : IAsyncDisposable
     {
+        private readonly string title;
         private readonly ISimpleChannelSender<TerminalRequest> requestWriter;
         private readonly ISimpleChannelReceiver<TerminalEvent> eventReader;
         private readonly Thread windowThread;
 
-        public GraphicsTerminal()
+        public GraphicsTerminal(string title)
         {
+            this.title = title;
+
             SenderReceiverPair<TerminalRequest> requestChannel = SimpleChannel.GetSenderReceiverPair<TerminalRequest>();
 
             SenderReceiverPair<TerminalEvent> eventChannel = SimpleChannel.GetSenderReceiverPair<TerminalEvent>();
@@ -19,7 +23,7 @@ namespace Sunlighter.GraphicsTerminalLib
             requestWriter = requestChannel.Sender;
             eventReader = eventChannel.Receiver;
 
-            FormArguments fa = new FormArguments(requestChannel.Receiver, eventChannel.Sender);
+            FormArguments fa = new FormArguments(title, requestChannel.Receiver, eventChannel.Sender);
 
             windowThread = new Thread(new ParameterizedThreadStart(RunWindowThread));
             windowThread.SetApartmentState(ApartmentState.STA);
@@ -35,6 +39,7 @@ namespace Sunlighter.GraphicsTerminalLib
                 Application.SetHighDpiMode(HighDpiMode.DpiUnawareGdiScaled);
 
                 using TerminalForm tf = new TerminalForm();
+                tf.Text = fa.Title;
                 tf.FormArguments = fa;
 
                 Application.Run(tf);
@@ -339,19 +344,23 @@ namespace Sunlighter.GraphicsTerminalLib
 
     internal sealed class FormArguments
     {
+        private readonly string title;
         private readonly ISimpleChannelReceiver<TerminalRequest> requestReader;
         private readonly ISimpleChannelSender<TerminalEvent> eventWriter;
 
         public FormArguments
         (
+            string title,
             ISimpleChannelReceiver<TerminalRequest> requestReader,
             ISimpleChannelSender<TerminalEvent> eventWriter
         )
         {
+            this.title = title;
             this.requestReader = requestReader;
             this.eventWriter = eventWriter;
         }
 
+        public string Title => title;
         public ISimpleChannelReceiver<TerminalRequest> RequestReader => requestReader;
         public ISimpleChannelSender<TerminalEvent> EventWriter => eventWriter;
     }

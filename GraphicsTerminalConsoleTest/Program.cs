@@ -11,7 +11,7 @@ namespace GraphicsTerminalConsoleTest
     {
         static async Task Main(string[] args)
         {
-            await using GraphicsTerminal terminal = new GraphicsTerminal();
+            await using GraphicsTerminal terminal = new GraphicsTerminal("Graphics Terminal Test");
 
             Random r = new Random();
 
@@ -39,9 +39,9 @@ namespace GraphicsTerminalConsoleTest
                 }
             }
 
-            //await TestCancellation(terminal);
+            await TestCancellation(terminal);
 
-            //await TestTextEntryWithAnimation(terminal);
+            await TestTextEntryWithAnimation(terminal);
 
             while (true)
             {
