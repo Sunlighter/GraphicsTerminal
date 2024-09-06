@@ -147,7 +147,7 @@ Your return type should include an indication of whether the user entered data o
 
 ### DisposeAsync
 
-Usually you wouldn&rsquo;t call this directly, you would set up `async using` instead, but you should know that it
+Usually you wouldn&rsquo;t call this directly, you would set up `await using` instead, but you should know that it
 causes the terminal window to immediately close. Usually you should arrange for this to happen if you received the
 `TE_UserCloseRequest` event, although you have the option to ask the user to save their data first, if appropriate.
 
