@@ -14,10 +14,9 @@ handler&rdquo; which has to be able to handle any event at any time. The advanta
 is that it&rsquo;s easy to forward events to any of several recipients, like having multiple windows open at the same
 time.)
 
-This library does not emulate a text terminal. It draws graphics onto a bitmap (using a function that you provide; you
-are given a `System.Drawing.Graphics`) and it scales the bitmap to fit in its window (regardless of aspect
-ratio). This is also easier to program, but may cause a blocky (or &ldquo;retro&rdquo;) appearance due to the bitmap
-scaling.
+This library does not emulate a text terminal. It lets you draw graphics onto a bitmap and it scales the bitmap to fit
+in its window (regardless of aspect ratio). This is also easier to program, but may cause a blocky (or
+&ldquo;retro&rdquo;) appearance due to the bitmap scaling.
 
 Using a bitmap in this way is somewhat inefficient, because the entire bitmap is replaced and redrawn every time an
 event is requested. This is fine for some programs because they would do something like that anyway, but it would not
