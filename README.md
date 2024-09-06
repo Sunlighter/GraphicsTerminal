@@ -23,8 +23,8 @@ event is requested. This is fine for some programs because they would do somethi
 be very efficient if you wanted to write a text terminal emulator, because it would end up having to redraw the whole
 screen just to turn the cursor on and off.
 
-For events, it supports mouse clicks and keypresses, and it has a couple of text input facilities, but it does not
-support detecting mouse motion, or drag-and-drop.
+For events, the library supports mouse clicks and keypresses, and it has a couple of text input facilities, but it
+does not support detecting mouse motion, or drag-and-drop.
 
 This library should be sufficient for writing simple graphics editors, font editors, and the like. These kinds of
 programs cannot be written on a text console, because they need graphics, but they might be easier to write if they
