@@ -7,12 +7,12 @@ Implementation of a Graphics Terminal
 
 This library gives you a &ldquo;graphics terminal&rdquo; which can draw graphics and request user input.
 
-It works on the assumption that your program (or the main task within your program) can block while waiting for user
-input. This is consistent with the &ldquo;old paradigm&rdquo; used by 80s microcomputers and DOS programs and console
-programs. Some programs are easier to write this way. (The &ldquo;new paradigm&rdquo; is to write an &ldquo;event
-handler&rdquo; function which has to be able to handle any event at any time, or to write objects that can be called
-by such an event handler function. The advantage of the &ldquo;new paradigm&rdquo; is that it&rsquo;s easy to forward
-events to any of several recipients, like having multiple windows open at the same time.)
+It works on the assumption that your program can block while waiting for user input. This is consistent with the
+&ldquo;old paradigm&rdquo; used by 80s microcomputers and DOS programs and (today) console programs. Some programs are
+easier to write this way. (The &ldquo;new paradigm,&rdquo; which is still very old, is to write an &ldquo;event
+handler&rdquo; which has to be able to handle any event at any time. The advantage of the &ldquo;new paradigm&rdquo;
+is that it&rsquo;s easy to forward events to any of several recipients, like having multiple windows open at the same
+time.)
 
 This library does not emulate a text terminal. It draws graphics onto a bitmap (using a function that you provide; you
 are given a `System.Drawing.Graphics`) and it scales the bitmap to fit in its window (regardless of aspect
