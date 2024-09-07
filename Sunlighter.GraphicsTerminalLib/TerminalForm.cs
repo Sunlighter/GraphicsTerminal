@@ -1,5 +1,6 @@
 ﻿using Sunlighter.OptionLib;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Sunlighter.GraphicsTerminalLib
 {
@@ -16,7 +17,7 @@ namespace Sunlighter.GraphicsTerminalLib
             InitializeComponent();
             formArguments = null;
             formLoaded = false;
-            terminalState = new IdleState(false);
+            terminalState = new IdleState(Pane.Busy);
             pendingCloseRequest = false;
             reallyClosing = false;
         }
@@ -49,6 +50,7 @@ namespace Sunlighter.GraphicsTerminalLib
             {
                 channelMonitor1.SetChannelReader(formArguments.RequestReader);
             }
+            SetPane(Pane.Busy);
         }
 
         public void SetPane(Pane p)
@@ -87,14 +89,7 @@ namespace Sunlighter.GraphicsTerminalLib
 
             if (e is IdleState ids)
             {
-                if (ids.ShowText)
-                {
-                    SetPane(Pane.CanvasWithTextInput);
-                }
-                else
-                {
-                    SetPane(Pane.Canvas);
-                }
+                SetPane(ids.Pane);
             }
             else if (e is DesiredCanvasEvent dce)
             {
@@ -111,7 +106,7 @@ namespace Sunlighter.GraphicsTerminalLib
             {
                 SetPane(Pane.BigText);
             }
-            else if (e is BusyState b)
+            else if (e is BusyState)
             {
                 SetPane(Pane.Busy);
             }
@@ -123,68 +118,84 @@ namespace Sunlighter.GraphicsTerminalLib
             {
                 System.Diagnostics.Debug.Assert(formArguments is not null);
 
-                if (pendingCloseRequest)
+                if (tr is TR_GetEvent getEventRequest)
                 {
-                    formArguments.EventWriter.Send(TE_UserCloseRequest.Value);
-                    SetTerminalState(new IdleState(terminalState.DesiresCanvasEvent(EventFlags.TextEntry)));
-                    pendingCloseRequest = false;
+                    Bitmap b = new Bitmap(getEventRequest.DesiredSize.Width, getEventRequest.DesiredSize.Height);
+                    try
+                    {
+                        using (Graphics g = Graphics.FromImage(b))
+                        {
+                            getEventRequest.Draw(g);
+                        }
+                    }
+                    catch (Exception exc)
+                    {
+                        System.Diagnostics.Debug.WriteLine(exc);
+                    }
+
+                    terminalCanvas1.SetBitmap(b);
+
+                    if ((getEventRequest.Flags & EventFlags.NewTextEntry) != EventFlags.None)
+                    {
+                        textInputArea.InputText = string.Empty;
+                    }
+
+                    SetTerminalState(new DesiredCanvasEvent(getEventRequest.Flags));
+                }
+                else if (tr is TR_GetBigText getTextRequest)
+                {
+                    bigTextDisplay1.LabelText = getTextRequest.LabelText;
+                    bigTextDisplay1.ContentText = getTextRequest.InitialContent;
+                    bigTextDisplay1.ContentReadOnly = getTextRequest.IsReadOnly;
+                    bigTextDisplay1.ButtonStyle = getTextRequest.Buttons;
+
+                    SetTerminalState(new DesiredTextEvent(getTextRequest.ContentReturn));
+                }
+                else if (tr is TR_ShowBusyForm busy)
+                {
+                    busyDisplay1.BusyDoing = busy.BusyDoing;
+                    busyDisplay1.ProgressAmount = busy.ProgressAmount;
+                    busyDisplay1.CancelVisible = busy.OptionalCts.HasValue;
+                    busyDisplay1.CancelEnabled = true;
+
+                    formArguments.EventWriter.Send(TE_BusyDisplayed.Value);
+
+                    SetTerminalState(new BusyState(busy.OptionalCts));
+                }
+                else if (tr is TR_ShowDialog showDialog)
+                {
+                    TE_DialogResult dr = showDialog.CallAndCreateResult(this);
+                    formArguments.EventWriter.Send(dr);
+
+                    System.Diagnostics.Debug.Assert(terminalState is IdleState);
+                    // leave terminal state alone
                 }
                 else
                 {
-                    if (tr is TR_GetEvent getEventRequest)
+                    System.Diagnostics.Debug.Assert(false, "Unknown type of terminal request");
+                }
+
+                if (pendingCloseRequest && terminalState is not IdleState)
+                {
+                    if (terminalState is BusyState bs)
                     {
-                        Bitmap b = new Bitmap(getEventRequest.DesiredSize.Width, getEventRequest.DesiredSize.Height);
-                        try
+                        if (bs.OptionalCts.HasValue)
                         {
-                            using (Graphics g = Graphics.FromImage(b))
-                            {
-                                getEventRequest.Draw(g);
-                            }
+                            bs.Cancel();
+                            busyDisplay1.CancelEnabled = false;
+                            pendingCloseRequest = false;
                         }
-                        catch (Exception exc)
-                        {
-                            System.Diagnostics.Debug.WriteLine(exc);
-                        }
-
-                        terminalCanvas1.SetBitmap(b);
-
-                        if ((getEventRequest.Flags & EventFlags.NewTextEntry) != EventFlags.None)
-                        {
-                            textInputArea.InputText = string.Empty;
-                        }
-
-                        SetTerminalState(new DesiredCanvasEvent(getEventRequest.Flags));
-                    }
-                    else if (tr is TR_GetBigText getTextRequest)
-                    {
-                        bigTextDisplay1.LabelText = getTextRequest.LabelText;
-                        bigTextDisplay1.ContentText = getTextRequest.InitialContent;
-                        bigTextDisplay1.ContentReadOnly = getTextRequest.IsReadOnly;
-                        bigTextDisplay1.ButtonStyle = getTextRequest.Buttons;
-
-                        SetTerminalState(DesiredTextEvent.Value);
-                    }
-                    else if (tr is TR_ShowBusyForm busy)
-                    {
-                        busyDisplay1.BusyDoing = busy.BusyDoing;
-                        busyDisplay1.ProgressAmount = busy.ProgressAmount;
-                        busyDisplay1.CancelVisible = busy.OptionalCts.HasValue;
-                        busyDisplay1.CancelEnabled = true;
-
-                        formArguments.EventWriter.Send(TE_BusyDisplayed.Value);
-
-                        SetTerminalState(new BusyState(busy.OptionalCts));
-                    }
-                    else if (tr is TR_ShowDialog showDialog)
-                    {
-                        TE_DialogResult dr = showDialog.CallAndCreateResult(this);
-                        formArguments.EventWriter.Send(dr);
-
-                        // leave terminal state alone
                     }
                     else
                     {
-                        System.Diagnostics.Debug.Assert(false, "Unknown type of terminal request");
+                        if (terminalState is DesiredTextEvent dte)
+                        {
+                            dte.SetContentReturn(bigTextDisplay1.ContentText);
+                        }
+
+                        formArguments.EventWriter.Send(TE_UserCloseRequest.Value);
+                        SetTerminalState(terminalState.GetIdleState());
+                        pendingCloseRequest = false;
                     }
                 }
             }
@@ -217,7 +228,7 @@ namespace Sunlighter.GraphicsTerminalLib
             {
                 formArguments.EventWriter.Send(new TE_TextEntry(textInputArea.InputText));
                 textInputArea.InputText = string.Empty;
-                SetTerminalState(new IdleState(false));
+                SetTerminalState(terminalState.GetIdleState());
             }
         }
 
@@ -226,7 +237,7 @@ namespace Sunlighter.GraphicsTerminalLib
             if (formArguments is not null && terminalState.DesiresCanvasEvent(EventFlags.TimerTick))
             {
                 formArguments.EventWriter.Send(TE_TimerTick.Value);
-                SetTerminalState(new IdleState(terminalState.DesiresCanvasEvent(EventFlags.TextEntry)));
+                SetTerminalState(terminalState.GetIdleState());
             }
         }
 
@@ -238,10 +249,27 @@ namespace Sunlighter.GraphicsTerminalLib
             {
                 e.Cancel = true;
 
-                if (terminalState is not IdleState)
+                if (terminalState is BusyState bs)
                 {
+                    if (bs.OptionalCts.HasValue)
+                    {
+                        bs.Cancel();
+                        busyDisplay1.CancelEnabled = false;
+                    }
+                    else
+                    {
+                        pendingCloseRequest = true;
+                    }
+                }
+                else if (terminalState is not IdleState)
+                {
+                    if (terminalState is DesiredTextEvent dte)
+                    {
+                        dte.SetContentReturn(bigTextDisplay1.ContentText);
+                    }
+
                     formArguments.EventWriter.Send(TE_UserCloseRequest.Value);
-                    SetTerminalState(new IdleState(terminalState.DesiresCanvasEvent(EventFlags.TextEntry)));
+                    SetTerminalState(terminalState.GetIdleState());
                 }
                 else
                 {
@@ -259,7 +287,7 @@ namespace Sunlighter.GraphicsTerminalLib
             if (formArguments is not null && terminalState.DesiresCanvasEvent(EventFlags.MouseClick))
             {
                 formArguments.EventWriter.Send(new TE_MouseClick(e.Location.X, e.Location.Y));
-                SetTerminalState(new IdleState(terminalState.DesiresCanvasEvent(EventFlags.TextEntry)));
+                SetTerminalState(terminalState.GetIdleState());
             }
         }
 
@@ -268,16 +296,17 @@ namespace Sunlighter.GraphicsTerminalLib
             if (formArguments is not null && terminalState.DesiresCanvasEvent(EventFlags.KeyDown))
             {
                 formArguments.EventWriter.Send(new TE_KeyDown(e.KeyData));
-                SetTerminalState(new IdleState(terminalState.DesiresCanvasEvent(EventFlags.TextEntry)));
+                SetTerminalState(terminalState.GetIdleState());
             }
         }
 
         private void bigTextDisplay1_ButtonClicked(object sender, BigTextButtonClickedEventArgs e)
         {
-            if (formArguments is not null && terminalState is DesiredTextEvent)
+            if (formArguments is not null && terminalState is DesiredTextEvent dte)
             {
+                dte.SetContentReturn(bigTextDisplay1.ContentText);
                 formArguments.EventWriter.Send(new TE_BigTextEntry(e.DialogResult, bigTextDisplay1.ContentText));
-                SetTerminalState(new IdleState(false));
+                SetTerminalState(terminalState.GetIdleState());
             }
         }
 
@@ -302,22 +331,29 @@ namespace Sunlighter.GraphicsTerminalLib
     public abstract class TerminalState
     {
         public abstract bool DesiresCanvasEvent(EventFlags e);
+
+        public abstract TerminalState GetIdleState();
     }
 
     public sealed class IdleState : TerminalState
     {
-        private readonly bool showText;
+        private readonly Pane pane;
 
-        public IdleState(bool showText)
+        public IdleState(Pane pane)
         {
-            this.showText = showText;
+            this.pane = pane;
         }
 
-        public bool ShowText => showText;
+        public Pane Pane => pane;
 
         public override bool DesiresCanvasEvent(EventFlags e)
         {
             return false;
+        }
+
+        public override TerminalState GetIdleState()
+        {
+            return this;
         }
     }
 
@@ -334,19 +370,38 @@ namespace Sunlighter.GraphicsTerminalLib
         {
             return (e & desiredEvents) != EventFlags.None;
         }
+
+        public override TerminalState GetIdleState()
+        {
+            return new IdleState(DesiresCanvasEvent(EventFlags.TextEntry) ? Pane.CanvasWithTextInput : Pane.Canvas);
+        }
     }
 
     public sealed class DesiredTextEvent : TerminalState
     {
-        private static readonly DesiredTextEvent value = new DesiredTextEvent();
+        private readonly Option<StrongBox<string>> contentReturn;
 
-        private DesiredTextEvent() { }
+        public DesiredTextEvent(Option<StrongBox<string>> contentReturn)
+        {
+            this.contentReturn = contentReturn;
+        }
 
-        public static DesiredTextEvent Value => value;
+        public void SetContentReturn(string content)
+        {
+            if (contentReturn.HasValue)
+            {
+                contentReturn.Value.Value = content;
+            }
+        }
 
         public override bool DesiresCanvasEvent(EventFlags e)
         {
             return false;
+        }
+
+        public override TerminalState GetIdleState()
+        {
+            return new IdleState(Pane.BigText);
         }
     }
 
@@ -369,6 +424,11 @@ namespace Sunlighter.GraphicsTerminalLib
         public override bool DesiresCanvasEvent(EventFlags e)
         {
             return false;
+        }
+
+        public override TerminalState GetIdleState()
+        {
+            return new IdleState(Pane.Busy);
         }
     }
 }

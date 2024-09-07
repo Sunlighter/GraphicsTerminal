@@ -3,6 +3,7 @@ using Sunlighter.OptionLib;
 using System.Collections.Immutable;
 using System.Drawing;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 
 namespace GraphicsTerminalConsoleTest
@@ -40,6 +41,13 @@ namespace GraphicsTerminalConsoleTest
             }
 
             await TestCancellation(terminal);
+
+            // note: if the user clicks the Close box during the non-cancellable part,
+            // the Close operation is queued, and passed to the next GetEvent call.
+            // This causes TestTextEntryWithAnimation to eat the TE_UserCloseRequest
+            // and return without doing anything.
+
+            // This is a bug in this test program, not in the library.
 
             await TestTextEntryWithAnimation(terminal);
 
@@ -91,17 +99,54 @@ namespace GraphicsTerminalConsoleTest
 
                     if (kc == Keys.A)
                     {
+                        StrongBox<string> textReturn = new StrongBox<string>();
+                        bool returning = false;
+
+                        redoText:
+
                         te = await terminal.GetBigTextAsync
                         (
                             "Example:",
                             false,
-                            DateTime.Now.ToString("G"),
+                            returning ? (textReturn.Value ?? string.Empty) : DateTime.Now.ToString("G"),
+                            textReturn,
                             MessageBoxButtons.OKCancel
                         );
 
                         if (te is TE_BigTextEntry bte)
                         {
                             Console.WriteLine($"DialogResult: {bte.DialogResult}");
+                        }
+                        else if (te is TE_UserCloseRequest)
+                        {
+                            TerminalEvent te2 = await terminal.GetEventAsync
+                            (
+                                new Size(400, 300),
+                                g =>
+                                {
+                                    g.Clear(Color.White);
+                                    using Brush br = new SolidBrush(Color.Blue);
+                                    using Font f = new Font("Lucida Console", 12.0f, FontStyle.Regular, GraphicsUnit.Point);
+
+                                    string prompt = "Are you sure? [Y/N]";
+                                    SizeF f0 = g.MeasureString(prompt, f);
+                                    float xpos = (400.0f - f0.Width) / 2.0f;
+                                    float ypos = (300.0f - f0.Height) / 2.0f;
+                                    g.DrawString(prompt, f, br, new PointF(xpos, ypos));
+                                },
+                                EventFlags.KeyDown
+                            );
+
+                            if (te2 is TE_KeyDown kd2)
+                            {
+                                if ((kd2.KeyData & Keys.KeyCode) == Keys.N)
+                                {
+                                    returning = true;
+                                    goto redoText;
+                                }
+                            }
+
+                            te = TE_UserCloseRequest.Value;
                         }
                     }
                     else if (kc == Keys.B)
@@ -118,6 +163,20 @@ namespace GraphicsTerminalConsoleTest
 
                 if (te is TE_UserCloseRequest) break;
             }
+
+            await terminal.ShowDialogAsync
+            (
+                parent =>
+                {
+                    return MessageBox.Show
+                    (
+                        "Text",
+                        "Caption",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information
+                    );
+                }
+            );
 
             await terminal.GetEventAsync
             (

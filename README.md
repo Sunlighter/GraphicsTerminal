@@ -55,6 +55,8 @@ You would not generally want to create two of these objects (because your task c
 them at a time), but you could possibly create multiple tasks, each of which has its own terminal object. These
 terminal objects would appear as unrelated windows on the screen.
 
+## Functions
+
 The terminal has only a few simple functions.
 
 ### GetEventAsync
@@ -103,14 +105,22 @@ text, which can be an empty string. You can allow the user to edit this text or 
 (the user will still be able to select the text and copy it to the clipboard). You can also display your choice of
 `MessageBoxButtons`.
 
-The function takes four arguments: `labelText` (which appears above the edit control and may be something like
-&ldquo;Type your text here:&rdquo;), `isReadOnly`, `content`, and `buttons`.
+There are two overloads to this function. The first one takes four arguments: `labelText` (which appears above the
+edit control and may be something like &ldquo;Type your text here:&rdquo;), `isReadOnly`, `content`, and
+`buttons`. The second overload takes a `contentReturn` argument, which is a `StrongBox<string>`. (The `contentReturn`
+argument comes after the `content` argument in the list.)
 
-You will get back a `TE_BigTextEntry` object, which contains a `DialogResult` and a `Text` property.  The modified
-text is always returned, even if the user clicked `Cancel`, so be careful to honor the user&rsquo;s wishes and discard
-it when appropriate.
+You will typically get back a `TE_BigTextEntry` object, which contains a `DialogResult` and a `Text` property.  The
+modified text is always returned, even if the user clicked `Cancel`, so be careful to honor the user&rsquo;s wishes
+and discard it when appropriate.
 
 It is also possible you will get back a `TE_UserCloseRequest`.
+
+If the `contentReturn` argument was specified, the value of the `StrongBox<string>` will be set to the string that was
+in the box at the time `GetBigTextAsync` returned (regardless of whether it returned `TE_BigTextEntry` or
+`TE_UserCloseRequest`). This allows that, if the close box was clicked, you can ask the user if they&rsquo;re sure,
+and if they choose &ldquo;no,&rdquo; you can return them to the text editor with the same text as before, so they
+don&rsquo;t lose their changes.
 
 ### ShowBusyFormAsync
 

@@ -2,6 +2,7 @@
 using Sunlighter.OptionLib;
 using System.Xml.Schema;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace Sunlighter.GraphicsTerminalLib
 {
@@ -71,7 +72,21 @@ namespace Sunlighter.GraphicsTerminalLib
             MessageBoxButtons buttons
         )
         {
-            requestWriter.Send(new TR_GetBigText(labelText, isReadOnly, content, buttons));
+            requestWriter.Send(new TR_GetBigText(labelText, isReadOnly, content, Option<StrongBox<string>>.None, buttons));
+            ReceiveResult<TerminalEvent> te = await eventReader.ReceiveAsync(CancellationToken.None);
+            return ((ReceivedItem<TerminalEvent>)te).Item;
+        }
+
+        public async Task<TerminalEvent> GetBigTextAsync
+        (
+            string labelText,
+            bool isReadOnly,
+            string content,
+            StrongBox<string> contentReturn,
+            MessageBoxButtons buttons
+        )
+        {
+            requestWriter.Send(new TR_GetBigText(labelText, isReadOnly, content, Option<StrongBox<string>>.Some(contentReturn), buttons));
             ReceiveResult<TerminalEvent> te = await eventReader.ReceiveAsync(CancellationToken.None);
             return ((ReceivedItem<TerminalEvent>)te).Item;
         }
@@ -276,6 +291,7 @@ namespace Sunlighter.GraphicsTerminalLib
         private readonly string labelText;
         private readonly bool isReadOnly;
         private readonly string initialContent;
+        private readonly Option<StrongBox<string>> contentReturn;
         private readonly MessageBoxButtons buttons;
 
         public TR_GetBigText
@@ -283,18 +299,21 @@ namespace Sunlighter.GraphicsTerminalLib
             string labelText,
             bool isReadOnly,
             string initialContent,
+            Option<StrongBox<string>> contentReturn,
             MessageBoxButtons buttons
         )
         {
             this.labelText = labelText;
             this.isReadOnly = isReadOnly;
             this.initialContent = initialContent;
+            this.contentReturn = contentReturn;
             this.buttons = buttons;
         }
 
         public string LabelText => labelText;
         public bool IsReadOnly => isReadOnly;
         public string InitialContent => initialContent;
+        public Option<StrongBox<string>> ContentReturn => contentReturn;
         public MessageBoxButtons Buttons => buttons;
     }
 
