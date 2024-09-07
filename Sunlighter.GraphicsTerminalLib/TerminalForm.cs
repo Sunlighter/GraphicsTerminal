@@ -166,6 +166,18 @@ namespace Sunlighter.GraphicsTerminalLib
                     System.Diagnostics.Debug.Assert(terminalState is IdleState);
                     // leave terminal state alone
                 }
+                else if (tr is TR_CheckPendingClose)
+                {
+                    if (pendingCloseRequest)
+                    {
+                        formArguments.EventWriter.Send(TE_UserCloseRequest.Value);
+                        pendingCloseRequest = false;
+                    }
+                    else
+                    {
+                        formArguments.EventWriter.Send(TE_Nothing.Value);
+                    }
+                }
                 else
                 {
                     System.Diagnostics.Debug.Assert(false, "Unknown type of terminal request");

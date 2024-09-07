@@ -156,6 +156,13 @@ namespace Sunlighter.GraphicsTerminalLib
             }
         }
 
+        public async Task<TerminalEvent> CheckPendingCloseAsync()
+        {
+            requestWriter.Send(TR_CheckPendingClose.Value);
+            ReceiveResult<TerminalEvent> te = await eventReader.ReceiveAsync(CancellationToken.None);
+            return ((ReceivedItem<TerminalEvent>)te).Item;
+        }
+
         public async ValueTask DisposeAsync()
         {
             requestWriter.SendEof();
@@ -207,6 +214,15 @@ namespace Sunlighter.GraphicsTerminalLib
         private TE_UserCloseRequest() { }
 
         public static TE_UserCloseRequest Value => value;
+    }
+
+    public sealed class TE_Nothing : TerminalEvent
+    {
+        private static readonly TE_Nothing value = new TE_Nothing();
+
+        private TE_Nothing() { }
+
+        public static TE_Nothing Value => value;
     }
 
     public sealed class TE_MouseClick : TerminalEvent
@@ -505,6 +521,15 @@ namespace Sunlighter.GraphicsTerminalLib
             T result = dialogFunc(parent);
             return new TE_DialogResult<T>(result);
         }
+    }
+
+    internal sealed class TR_CheckPendingClose : TerminalRequest
+    {
+        private static readonly TR_CheckPendingClose value = new TR_CheckPendingClose();
+
+        private TR_CheckPendingClose() { }
+
+        public static TR_CheckPendingClose Value => value;
     }
 
     internal sealed class FormArguments

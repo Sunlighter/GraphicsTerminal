@@ -78,9 +78,12 @@ the current size of the drawing area and passes it to `createBitmap`, which is e
 return it. The new bitmap is not required to be of the provided size, and will be scaled to fit the drawing area if
 necessary.
 
-`GetEventAsync(Func<Bitmap?, Size, Bitmap> createBitmap, EventFlags flags)` gets the old bitmap and passes it to
-`createBitmap`, which may either modify the given bitmap and return it, or create a new bitmap and arrange for the old
-one to be disposed eventually. The size of the drawing area is provided.
+`GetEventAsync(Func<Bitmap?, Size, Bitmap> createBitmap, EventFlags flags)` gets the old bitmap (or `null` if there
+wasn&rsquo;t a previous bitmap), and passes it to `createBitmap`, which may either modify the given bitmap and return
+it, or create a new bitmap and arrange for the old one to be disposed eventually. The size of the drawing area is
+provided and can be compared against the size of the bitmap.
+
+Any `createBitmap` or `draw` function will be called exactly once.
 
 All the `GetEventAsync` overloads take a `flags` argument which indicates the events you want.
 
@@ -153,8 +156,8 @@ that the user knows what to expect.
 progress bar is put in &ldquo;Marquee&rdquo; mode), and an optional `CancellationTokenSource` called `cts`.
 
 If you provide the `CancellationTokenSource`, a `Cancel` button will be displayed, and if the user clicks the button,
-it will be disabled (to indicate to the user that the cancellation is now in progress) and the cancellation token will
-be cancelled. If the user tries to close the window, it will simulate clicking the `Cancel` button.
+the button will be disabled (to indicate to the user that the cancellation is now in progress) and the cancellation
+token will be cancelled. If the user tries to close the window, it will simulate clicking the `Cancel` button.
 
 If you do not provide a `CancellationTokenSource`, the `Cancel` button is not displayed.
 
@@ -179,6 +182,22 @@ This function allows you to show an arbitrary modal dialog; you pass a function 
 `OpenFileDialog`, or you can use `MessageBox.Show`, or you can use your own dialogs.
 
 Your return type should include an indication of whether the user entered data or canceled the dialog.
+
+### CheckPendingCloseAsync
+
+This function checks for the &ldquo;pending close&rdquo; state and returns &ldquo;immediately.&rdquo; The
+&ldquo;pending close&rdquo; state occurs when the user clicks the window&rsquo;s Close box, but the thread using the
+terminal is busy and not waiting for an event. If there is a pending &ldquo;close,&rdquo; this function clears it and
+returns a `TE_UserCloseRequest` object, otherwise it returns a `TE_Nothing` object.
+
+The `TE_Nothing` object is not returned by any other function than this one.
+
+Note that a pending close is also cleared if `GetEventAsync` or `GetBigTextAsync` is called (in which case it
+immediately returns `TE_UserCloseRequest`), or if a cancellable busy screen is displayed (in which case an immediate
+click of the Cancel button is simulated).
+
+If the controlling thread has been busy, it&rsquo;s a good idea to call this function before calling
+`ShowDialogAsync`, which does not check for a pending close.
 
 ### DisposeAsync
 

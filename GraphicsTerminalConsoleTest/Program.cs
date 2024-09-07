@@ -40,17 +40,15 @@ namespace GraphicsTerminalConsoleTest
                 }
             }
 
-            //await TestCancellation(terminal);
+            await TestCancellation(terminal);
 
-            // note: if the user clicks the Close box during the non-cancellable part,
-            // the Close operation is queued, and passed to the next GetEvent call.
-            // This causes TestTextEntryWithAnimation to eat the TE_UserCloseRequest
-            // (as if the user clicked Close at the first prompt) and return without
-            // doing anything.
+            if (await terminal.CheckPendingCloseAsync() is TE_UserCloseRequest)
+            {
+                // this can happen if the user tries to close the window during the non-cancellable part.
+                return;
+            }
 
-            // This is a bug in this test program, not in the library.
-
-            //await TestTextEntryWithAnimation(terminal);
+            await TestTextEntryWithAnimation(terminal);
 
             await TestScaledGraphics(terminal);
 
