@@ -48,6 +48,7 @@
             set
             {
                 ResizeRedraw = value;
+                UpdateStyles();
             }
         }
 
