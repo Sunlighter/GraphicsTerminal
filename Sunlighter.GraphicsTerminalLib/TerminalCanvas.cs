@@ -39,6 +39,18 @@
             UpdateStyles();
         }
 
+        public bool ResizeRedraw2
+        {
+            get
+            {
+                return ResizeRedraw;
+            }
+            set
+            {
+                ResizeRedraw = value;
+            }
+        }
+
         protected override void OnPaintBackground(PaintEventArgs pevent)
         {
             if (bitmap is null)

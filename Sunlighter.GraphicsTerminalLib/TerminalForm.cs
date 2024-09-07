@@ -122,6 +122,7 @@ namespace Sunlighter.GraphicsTerminalLib
                 {
                     Bitmap b = getEventRequest.BitmapOption.CreateBitmap(terminalCanvas1.RemoveBitmap(), terminalCanvas1.ClientSize);
 
+                    terminalCanvas1.ResizeRedraw2 = (getEventRequest.Flags & EventFlags.SizeChanged) == 0;
                     terminalCanvas1.SetBitmap(b);
 
                     if ((getEventRequest.Flags & EventFlags.NewTextEntry) != EventFlags.None)

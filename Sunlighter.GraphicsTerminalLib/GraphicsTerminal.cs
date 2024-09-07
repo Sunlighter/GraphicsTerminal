@@ -88,6 +88,17 @@ namespace Sunlighter.GraphicsTerminalLib
             return ((ReceivedItem<TerminalEvent>)te).Item;
         }
 
+        public async Task<TerminalEvent> GetEventAsync
+        (
+            Func<Bitmap?, Size, Bitmap> createBitmap,
+            EventFlags flags
+        )
+        {
+            requestWriter.Send(new TR_GetEvent(new BO_Func(createBitmap), flags));
+            ReceiveResult<TerminalEvent> te = await eventReader.ReceiveAsync(CancellationToken.None);
+            return ((ReceivedItem<TerminalEvent>)te).Item;
+        }
+
         public async Task<TerminalEvent> GetBigTextAsync
         (
             string labelText,
@@ -380,6 +391,24 @@ namespace Sunlighter.GraphicsTerminalLib
             }
 
             return createBitmap(clientSize);
+        }
+    }
+
+    internal sealed class BO_Func : BitmapOption
+    {
+        private readonly Func<Bitmap?, Size, Bitmap> createBitmap;
+
+        public BO_Func
+        (
+            Func<Bitmap?, Size, Bitmap> createBitmap
+        )
+        {
+            this.createBitmap = createBitmap;
+        }
+
+        public override Bitmap CreateBitmap(Bitmap? oldBitmap, Size clientSize)
+        {
+            return createBitmap(oldBitmap, clientSize);
         }
     }
 
