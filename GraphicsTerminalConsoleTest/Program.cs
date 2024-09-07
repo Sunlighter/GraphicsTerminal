@@ -294,6 +294,9 @@ namespace GraphicsTerminalConsoleTest
 
             ImmutableList<LineData> ldlist = ImmutableList<LineData>.Empty;
 
+            bool text = false;
+            bool sizeChanged = false;
+
             while(true)
             {
                 TerminalEvent te = await terminal.GetEventAsync
@@ -316,7 +319,9 @@ namespace GraphicsTerminalConsoleTest
                         return b;
                     },
                     Option<DisposableBox<Bitmap>>.None,
-                    EventFlags.KeyDown | EventFlags.MouseClick | EventFlags.SizeChanged
+                    EventFlags.KeyDown | EventFlags.MouseClick | EventFlags.SizeChanged |
+                    (text ? EventFlags.TextEntry : EventFlags.None) |
+                    (sizeChanged && text ? EventFlags.None : EventFlags.NewTextEntry)
                 );
 
                 if (te is TE_UserCloseRequest)
@@ -331,8 +336,15 @@ namespace GraphicsTerminalConsoleTest
                     }
                 }
 
-                if (te is not TE_SizeChanged)
+                if (te is TE_SizeChanged)
                 {
+                    sizeChanged = true;
+
+                    // sizing things around should leave the text input area alone, if it is displayed.
+                }
+                else
+                {
+                    text = !text;
                     ldlist = ldlist.Add(new LineData((float)r.NextDouble(), (float)r.NextDouble(), (float)r.NextDouble(), (float)r.NextDouble()));
                 }
             }

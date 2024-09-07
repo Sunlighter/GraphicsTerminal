@@ -61,13 +61,28 @@ The terminal has only a few simple functions.
 
 ### GetEventAsync
 
-`GetEventAsync` draws graphics, blocks until a desired event occurs, and then returns the event, which is an object
-inheriting from the `TerminalEvent` class. `GetEventAsync` creates a `Bitmap` and draws the graphics onto the
-bitmap. It takes three arguments: a `System.Drawing.Size` indicating the desired size of the bitmap, an
-`Action<System.Drawing.Graphics>` function, which is expected to draw the graphics on the bitmap, and a set of
-`EventFlags` which indicates what events you want.
+`GetEventAsync` displays graphics, blocks until a desired event occurs, and then returns the event, which is an object
+inheriting from the `TerminalEvent` class. There are multiple overloads depending on where to get the graphics from.
 
-Be sure to call <code>Clear</code> first, and to use colors with opaque alpha values.
+`GetEventAsync(Size actionSize, Action<Graphics> draw, EventFlags flags)` takes an `actionSize`, creates a new bitmap
+of that size, creates a `Graphics` to draw on that bitmap, and passes the `Graphics` to your `draw` function. The
+bitmap will be scaled to fill the drawing area. Be sure to call <code>Clear</code> first, and to use colors with
+opaque alpha values.
+
+`GetEventAsync(Bitmap newBitmap, Option<DisposableBox<Bitmap>> bitmapReturn, EventFlags flags)` takes an
+already-created `Bitmap` and uses that. If the `DisposableBox<Bitmap>` is provided, it will receive the old bitmap, if
+there was one; otherwise, the old bitmap will be disposed. The new bitmap will be scaled to fit the drawing area.
+
+`GetEventAsync(Func<Size, Bitmap> createBitmap, Option<DisposableBox<Bitmap>> bitmapReturn, EventFlags flags)` gets
+the current size of the drawing area and passes it to `createBitmap`, which is expected to create a new bitmap and
+return it. The new bitmap is not required to be of the provided size, and will be scaled to fit the drawing area if
+necessary.
+
+`GetEventAsync(Func<Bitmap?, Size, Bitmap> createBitmap, EventFlags flags)` gets the old bitmap and passes it to
+`createBitmap`, which may either modify the given bitmap and return it, or create a new bitmap and arrange for the old
+one to be disposed eventually. The size of the drawing area is provided.
+
+All the `GetEventAsync` overloads take a `flags` argument which indicates the events you want.
 
 The `EventFlags` are:
 
@@ -93,6 +108,9 @@ so that the user can continue typing.
 drawing (*not* in the text entry area, which can be focused separately, or might be hidden).  The
 `System.Windows.Forms.Keys` value is included in the event. (The code takes extra steps to ensure that arrow keys are
 treated like any other keys.)
+
+* `SizeChanged`, which corresponds to the `TE_SizeChanged` event class. This event is caused by the window being
+resized and indicates the new size of the drawing area.
 
 Note that a `TE_UserCloseRequest` event can also be returned by any call to `GetEventAsync`. This indicates that the
 user clicked the box to close the window. This event can happen at any time, and there is no way to specify that you
@@ -136,9 +154,16 @@ progress bar is put in &ldquo;Marquee&rdquo; mode), and an optional `Cancellatio
 
 If you provide the `CancellationTokenSource`, a `Cancel` button will be displayed, and if the user clicks the button,
 it will be disabled (to indicate to the user that the cancellation is now in progress) and the cancellation token will
-be cancelled.
+be cancelled. If the user tries to close the window, it will simulate clicking the `Cancel` button.
 
 If you do not provide a `CancellationTokenSource`, the `Cancel` button is not displayed.
+
+If the user tries to close the window, and there is no `Cancel` button, then the window enters a &ldquo;pending
+close&rdquo; state. There is no visible indication of this state. However, if the window is in this state, the next
+call to `GetEventAsync` or `GetBigTextAsync` will return `TE_UserCloseRequest` (and clear the &ldquo;pending
+close&rdquo; state), and the next call to `ShowBusyFormAsync` which is cancellable will simulate clicking the `Cancel`
+button immediately (and will clear the &ldquo;pending close&rdquo; state). Note that `ShowDialogAsync` cannot detect
+the &ldquo;pending close&rdquo; state and does not affect it.
 
 The `ShowBusyFormAsync` function is `async` but returns &ldquo;immediately,&rdquo; as soon as the terminal has started
 displaying the busy status.

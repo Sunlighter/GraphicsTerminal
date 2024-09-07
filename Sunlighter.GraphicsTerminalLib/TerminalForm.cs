@@ -53,8 +53,12 @@ namespace Sunlighter.GraphicsTerminalLib
             SetPane(Pane.Busy);
         }
 
+        bool settingPane = false;
+
         public void SetPane(Pane p)
         {
+            settingPane = true;
+
             bool textInputAreaPreviouslyVisible = textInputArea.Visible;
 
             terminalCanvas1.Visible = (p == Pane.Canvas || p == Pane.CanvasWithTextInput);
@@ -81,6 +85,8 @@ namespace Sunlighter.GraphicsTerminalLib
                     busyDisplay1.Focus();
                     break;
             }
+
+            settingPane = false;
         }
 
         private void SetTerminalState(TerminalState e)
@@ -120,6 +126,8 @@ namespace Sunlighter.GraphicsTerminalLib
 
                 if (tr is TR_GetEvent getEventRequest)
                 {
+                    SetTerminalState(new DesiredCanvasEvent(getEventRequest.Flags));
+
                     Bitmap b = getEventRequest.BitmapOption.CreateBitmap(terminalCanvas1.RemoveBitmap(), terminalCanvas1.ClientSize);
 
                     terminalCanvas1.ResizeRedraw2 = (getEventRequest.Flags & EventFlags.SizeChanged) == 0;
@@ -129,28 +137,26 @@ namespace Sunlighter.GraphicsTerminalLib
                     {
                         textInputArea.InputText = string.Empty;
                     }
-
-                    SetTerminalState(new DesiredCanvasEvent(getEventRequest.Flags));
                 }
                 else if (tr is TR_GetBigText getTextRequest)
                 {
+                    SetTerminalState(new DesiredTextEvent(getTextRequest.ContentReturn));
+
                     bigTextDisplay1.LabelText = getTextRequest.LabelText;
                     bigTextDisplay1.ContentText = getTextRequest.InitialContent;
                     bigTextDisplay1.ContentReadOnly = getTextRequest.IsReadOnly;
                     bigTextDisplay1.ButtonStyle = getTextRequest.Buttons;
-
-                    SetTerminalState(new DesiredTextEvent(getTextRequest.ContentReturn));
                 }
                 else if (tr is TR_ShowBusyForm busy)
                 {
+                    SetTerminalState(new BusyState(busy.OptionalCts));
+
                     busyDisplay1.BusyDoing = busy.BusyDoing;
                     busyDisplay1.ProgressAmount = busy.ProgressAmount;
                     busyDisplay1.CancelVisible = busy.OptionalCts.HasValue;
                     busyDisplay1.CancelEnabled = true;
 
                     formArguments.EventWriter.Send(TE_BusyDisplayed.Value);
-
-                    SetTerminalState(new BusyState(busy.OptionalCts));
                 }
                 else if (tr is TR_ShowDialog showDialog)
                 {
@@ -311,6 +317,8 @@ namespace Sunlighter.GraphicsTerminalLib
 
         private void terminalCanvas1_ClientSizeChanged(object sender, EventArgs e)
         {
+            if (settingPane) return;
+
             if (formArguments is not null && terminalState.DesiresCanvasEvent(EventFlags.SizeChanged))
             {
                 formArguments.EventWriter.Send(new TE_SizeChanged(terminalCanvas1.ClientSize));
