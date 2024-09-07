@@ -59,7 +59,31 @@ namespace Sunlighter.GraphicsTerminalLib
             EventFlags flags
         )
         {
-            requestWriter.Send(new TR_GetEvent(flags, desiredSize, draw));
+            requestWriter.Send(new TR_GetEvent(new BO_DrawToFixedSize(desiredSize, draw), flags));
+            ReceiveResult<TerminalEvent> te = await eventReader.ReceiveAsync(CancellationToken.None);
+            return ((ReceivedItem<TerminalEvent>)te).Item;
+        }
+
+        public async Task<TerminalEvent> GetEventAsync
+        (
+            Bitmap newBitmap,
+            Option<DisposableBox<Bitmap>> bitmapReturn,
+            EventFlags flags
+        )
+        {
+            requestWriter.Send(new TR_GetEvent(new BO_BitmapSwitch(_ => newBitmap, bitmapReturn), flags));
+            ReceiveResult<TerminalEvent> te = await eventReader.ReceiveAsync(CancellationToken.None);
+            return ((ReceivedItem<TerminalEvent>)te).Item;
+        }
+
+        public async Task<TerminalEvent> GetEventAsync
+        (
+            Func<Size, Bitmap> createBitmap,
+            Option<DisposableBox<Bitmap>> bitmapReturn,
+            EventFlags flags
+        )
+        {
+            requestWriter.Send(new TR_GetEvent(new BO_BitmapSwitch(createBitmap, bitmapReturn), flags));
             ReceiveResult<TerminalEvent> te = await eventReader.ReceiveAsync(CancellationToken.None);
             return ((ReceivedItem<TerminalEvent>)te).Item;
         }
@@ -148,6 +172,7 @@ namespace Sunlighter.GraphicsTerminalLib
         TextEntry = 4,
         NewTextEntry = 8,
         KeyDown = 16,
+        SizeChanged = 32,
     }
 
     public abstract class TerminalEvent
@@ -254,36 +279,128 @@ namespace Sunlighter.GraphicsTerminalLib
         public T Value => value;
     }
 
+    public sealed class TE_SizeChanged : TerminalEvent
+    {
+        private readonly Size size;
+
+        public TE_SizeChanged(Size size)
+        {
+            this.size = size;
+        }
+
+        public Size Size => size;
+    }
+
     internal abstract class TerminalRequest
     {
 
     }
 
-    internal sealed class TR_GetEvent : TerminalRequest
+    internal abstract class BitmapOption
     {
-        private readonly EventFlags flags;
+        /// <summary>
+        /// Should take ownership of the old bitmap and return a new bitmap (possibly of the clientSize) or the same bitmap.
+        /// </summary>
+        public abstract Bitmap CreateBitmap(Bitmap? oldBitmap, Size clientSize);
+    }
+
+    internal sealed class BO_DrawToFixedSize : BitmapOption
+    {
         private readonly Size desiredSize;
         private readonly Action<Graphics> draw;
 
-        public TR_GetEvent
+        public BO_DrawToFixedSize
         (
-            EventFlags flags,
             Size desiredSize,
             Action<Graphics> draw
         )
         {
-            this.flags = flags;
             this.desiredSize = desiredSize;
             this.draw = draw;
         }
 
+        public override Bitmap CreateBitmap(Bitmap? oldBitmap, Size clientSize)
+        {
+            if (oldBitmap is not null)
+            {
+                oldBitmap.Dispose();
+            }
+
+            Bitmap b = new Bitmap(desiredSize.Width, desiredSize.Height);
+            try
+            {
+                using (Graphics g = Graphics.FromImage(b))
+                {
+                    draw(g);
+                }
+            }
+            catch(Exception exc)
+            {
+                System.Diagnostics.Debug.WriteLine("***** Exception during drawing: *****");
+                System.Diagnostics.Debug.WriteLine(exc);
+            }
+            return b;
+        }
+    }
+
+    internal sealed class BO_BitmapSwitch : BitmapOption
+    {
+        private readonly Func<Size, Bitmap> createBitmap;
+        private readonly Option<DisposableBox<Bitmap>> bitmapReturn;
+
+        public BO_BitmapSwitch
+        (
+            Func<Size, Bitmap> createBitmap,
+            Option<DisposableBox<Bitmap>> bitmapReturn
+        )
+        {
+            this.createBitmap = createBitmap;
+            this.bitmapReturn = bitmapReturn;
+        }
+
+        public override Bitmap CreateBitmap(Bitmap? oldBitmap, Size clientSize)
+        {
+            if (bitmapReturn.HasValue)
+            {
+                if (oldBitmap is not null)
+                {
+                    bitmapReturn.Value.Set(oldBitmap);
+                }
+                else
+                {
+                    bitmapReturn.Value.Clear();
+                }
+            }
+            else
+            {
+                if (oldBitmap is not null)
+                {
+                    oldBitmap.Dispose();
+                }
+            }
+
+            return createBitmap(clientSize);
+        }
+    }
+
+    internal sealed class TR_GetEvent : TerminalRequest
+    {
+        private readonly BitmapOption bitmapOption;
+        private readonly EventFlags flags;
+
+        public TR_GetEvent
+        (
+            BitmapOption bitmapOption,
+            EventFlags flags
+        )
+        {
+            this.bitmapOption = bitmapOption;
+            this.flags = flags;
+        }
+
         public EventFlags Flags => flags;
 
-        public Size DesiredSize => desiredSize;
-
-        public Action<Graphics> DrawAction => draw;
-
-        public void Draw(Graphics g) => draw(g);
+        public BitmapOption BitmapOption => bitmapOption;
     }
 
     internal sealed class TR_GetBigText : TerminalRequest

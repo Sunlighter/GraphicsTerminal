@@ -40,16 +40,19 @@ namespace GraphicsTerminalConsoleTest
                 }
             }
 
-            await TestCancellation(terminal);
+            //await TestCancellation(terminal);
 
             // note: if the user clicks the Close box during the non-cancellable part,
             // the Close operation is queued, and passed to the next GetEvent call.
             // This causes TestTextEntryWithAnimation to eat the TE_UserCloseRequest
-            // and return without doing anything.
+            // (as if the user clicked Close at the first prompt) and return without
+            // doing anything.
 
             // This is a bug in this test program, not in the library.
 
-            await TestTextEntryWithAnimation(terminal);
+            //await TestTextEntryWithAnimation(terminal);
+
+            await TestScaledGraphics(terminal);
 
             while (true)
             {
@@ -283,6 +286,77 @@ namespace GraphicsTerminalConsoleTest
                     if (x == 512) x = 0;
                 }
             }
+        }
+
+        private static async Task TestScaledGraphics(GraphicsTerminal terminal)
+        {
+            Random r = new Random();
+
+            ImmutableList<LineData> ldlist = ImmutableList<LineData>.Empty;
+
+            while(true)
+            {
+                TerminalEvent te = await terminal.GetEventAsync
+                (
+                    size =>
+                    {
+                        Bitmap b = new Bitmap(size.Width, size.Height);
+                        using (Graphics g = Graphics.FromImage(b))
+                        {
+                            g.Clear(Color.White);
+
+                            using Brush br = new SolidBrush(Color.Red);
+                            using Pen p = new Pen(br, 1.0f);
+
+                            foreach (LineData ld in ldlist)
+                            {
+                                ld.Draw(g, p, (float)size.Width, (float)size.Height);
+                            }
+                        }
+                        return b;
+                    },
+                    Option<DisposableBox<Bitmap>>.None,
+                    EventFlags.KeyDown | EventFlags.MouseClick | EventFlags.SizeChanged
+                );
+
+                if (te is TE_UserCloseRequest)
+                {
+                    break;
+                }
+                else if (te is TE_KeyDown kd)
+                {
+                    if ((kd.KeyData & Keys.KeyCode) == Keys.Q)
+                    {
+                        break;
+                    }
+                }
+
+                if (te is not TE_SizeChanged)
+                {
+                    ldlist = ldlist.Add(new LineData((float)r.NextDouble(), (float)r.NextDouble(), (float)r.NextDouble(), (float)r.NextDouble()));
+                }
+            }
+        }
+    }
+
+    internal sealed class LineData
+    {
+        private float x1;
+        private float y1;
+        private float x2;
+        private float y2;
+
+        public LineData(float x1, float y1, float x2, float y2)
+        {
+            this.x1 = x1;
+            this.y1 = y1;
+            this.x2 = x2;
+            this.y2 = y2;
+        }
+
+        public void Draw(Graphics g, Pen p, float xscale, float yscale)
+        {
+            g.DrawLine(p, x1 * xscale, y1 * yscale, x2 * xscale, y2 * yscale);
         }
     }
 }

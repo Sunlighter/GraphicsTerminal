@@ -70,6 +70,7 @@
             terminalCanvas1.Text = "terminalCanvas1";
             terminalCanvas1.CanvasMouseClick += terminalCanvas1_CanvasMouseClick;
             terminalCanvas1.CanvasKeyDown += terminalCanvas1_CanvasKeyDown;
+            terminalCanvas1.ClientSizeChanged += terminalCanvas1_ClientSizeChanged;
             // 
             // bigTextDisplay1
             // 

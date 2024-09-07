@@ -10,6 +10,9 @@
             bitmap = null;
         }
 
+        /// <summary>
+        /// Takes ownership of the bitmap.
+        /// </summary>
         public void SetBitmap(Bitmap b)
         {
             if (bitmap is not null)
@@ -18,6 +21,14 @@
             }
             bitmap = b;
             Invalidate();
+        }
+
+        public Bitmap? RemoveBitmap()
+        {
+            Bitmap? oldBitmap = bitmap;
+            bitmap = null;
+            Invalidate();
+            return oldBitmap;
         }
 
         protected override void OnCreateControl()

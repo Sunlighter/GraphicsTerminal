@@ -120,18 +120,7 @@ namespace Sunlighter.GraphicsTerminalLib
 
                 if (tr is TR_GetEvent getEventRequest)
                 {
-                    Bitmap b = new Bitmap(getEventRequest.DesiredSize.Width, getEventRequest.DesiredSize.Height);
-                    try
-                    {
-                        using (Graphics g = Graphics.FromImage(b))
-                        {
-                            getEventRequest.Draw(g);
-                        }
-                    }
-                    catch (Exception exc)
-                    {
-                        System.Diagnostics.Debug.WriteLine(exc);
-                    }
+                    Bitmap b = getEventRequest.BitmapOption.CreateBitmap(terminalCanvas1.RemoveBitmap(), terminalCanvas1.ClientSize);
 
                     terminalCanvas1.SetBitmap(b);
 
@@ -316,6 +305,15 @@ namespace Sunlighter.GraphicsTerminalLib
             {
                 bs.Cancel();
                 busyDisplay1.CancelEnabled = false;
+            }
+        }
+
+        private void terminalCanvas1_ClientSizeChanged(object sender, EventArgs e)
+        {
+            if (formArguments is not null && terminalState.DesiresCanvasEvent(EventFlags.SizeChanged))
+            {
+                formArguments.EventWriter.Send(new TE_SizeChanged(terminalCanvas1.ClientSize));
+                SetTerminalState(terminalState.GetIdleState());
             }
         }
     }
