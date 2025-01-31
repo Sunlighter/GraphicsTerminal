@@ -7,16 +7,19 @@ Implementation of a Graphics Terminal
 
 This library gives you a &ldquo;graphics terminal&rdquo; which can draw graphics and request user input.
 
-It works on the assumption that your program can block while waiting for user input. This is consistent with the
-&ldquo;old paradigm&rdquo; used by 80s microcomputers and DOS programs and (today) console programs. Some programs are
-easier to write this way. (The &ldquo;new paradigm,&rdquo; which is still very old, is to write an &ldquo;event
-handler&rdquo; which has to be able to handle any event at any time. The advantage of the &ldquo;new paradigm&rdquo;
-is that it&rsquo;s easy to forward events to any of several recipients, like having multiple windows open at the same
-time.)
+This is *not* an emulator. It runs *in-process* (without using the network), it does *not* use &ldquo;control
+codes&rdquo; (preferring instead to receive delegate functions which do the drawing), and it does *not* provide text
+terminal functions.
 
-This library does not emulate a text terminal. It lets you draw graphics onto a bitmap and it scales the bitmap to fit
-in its window (regardless of aspect ratio). This is also easier to program, but may cause a blocky (or
-&ldquo;retro&rdquo;) appearance due to the bitmap scaling.
+Its main purpose is to let you write &ldquo;old-style&rdquo; graphics programs which block while waiting for user
+input.  This is consistent with 80s microcomputers and DOS programs and (today) console programs. Some programs are
+easier to write this way. (The new way to write graphics programs is to write an &ldquo;event handler&rdquo; which has
+to be able to handle any event at any time. The advantage of the new way is that it&rsquo;s easy to forward events to
+any of several recipients, like having multiple windows open at the same time.)
+
+You can draw graphics onto a bitmap and this terminal scales the bitmap to fit in its window (regardless of aspect
+ratio). This is also easier to program, but may cause a blocky (or &ldquo;retro&rdquo;) appearance due to the bitmap
+scaling.
 
 Using a bitmap in this way is somewhat inefficient, because the entire bitmap is replaced and redrawn every time an
 event is requested. This is fine for some programs because they would do something like that anyway, but it would not
@@ -28,8 +31,7 @@ does not support detecting mouse motion, or drag-and-drop.
 
 This library should be sufficient for writing simple graphics editors, font editors, and the like. These kinds of
 programs cannot be written on a text console, because they need graphics, but they might be easier to write if they
-don&rsquo;t have to address the &ldquo;new paradigm.&rdquo; (One way to handle the &ldquo;new paradigm&rdquo; is to
-use state machines or coroutines or alternate threads. This library itself uses an alternate thread.)
+can block waiting for user input.
 
 I am releasing this program as open source so that anyone can use it as a base and make modifications, such as adding
 features or remedying any deficiencies. I may also add features later, depending on how I try to use it.
