@@ -1,4 +1,6 @@
-﻿namespace Sunlighter.GraphicsTerminalLib
+﻿using System.ComponentModel;
+
+namespace Sunlighter.GraphicsTerminalLib
 {
     public partial class TerminalCanvas : Control
     {
@@ -39,6 +41,8 @@
             UpdateStyles();
         }
 
+        [Browsable(true)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool ResizeRedraw2
         {
             get

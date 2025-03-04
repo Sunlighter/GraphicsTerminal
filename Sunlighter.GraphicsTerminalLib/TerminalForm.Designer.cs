@@ -65,6 +65,7 @@
             terminalCanvas1.Dock = DockStyle.Fill;
             terminalCanvas1.Location = new Point(0, 0);
             terminalCanvas1.Name = "terminalCanvas1";
+            terminalCanvas1.ResizeRedraw2 = true;
             terminalCanvas1.Size = new Size(800, 408);
             terminalCanvas1.TabIndex = 1;
             terminalCanvas1.Text = "terminalCanvas1";

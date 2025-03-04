@@ -1,14 +1,5 @@
 ﻿using Sunlighter.OptionLib;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.ComponentModel.Design.Serialization;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace Sunlighter.GraphicsTerminalLib
 {
@@ -19,18 +10,24 @@ namespace Sunlighter.GraphicsTerminalLib
             InitializeComponent();
         }
 
+        [Browsable(true)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public string BusyDoing
         {
             get { return label.Text; }
             set { label.Text = value ?? string.Empty; }
         }
 
+        [Browsable(true)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool CancelVisible
         {
             get { return buttonCancel.Visible; }
             set { buttonCancel.Visible = value; }
         }
 
+        [Browsable(true)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool CancelEnabled
         {
             get { return buttonCancel.Enabled; }

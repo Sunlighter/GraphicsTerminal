@@ -1,5 +1,5 @@
-﻿using Sunlighter.SimpleChannelLib;
-using Sunlighter.OptionLib;
+﻿using Sunlighter.OptionLib;
+using Sunlighter.SimpleChannelLib;
 using System.ComponentModel;
 
 namespace Sunlighter.GraphicsTerminalLib
@@ -20,6 +20,8 @@ namespace Sunlighter.GraphicsTerminalLib
             cts = Option<CancellationTokenSource>.None;
         }
 
+        [Browsable(true)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public ISynchronizeInvoke? SyncRoot { get; set; }
 
         private Option<CancellationTokenSource> cts;

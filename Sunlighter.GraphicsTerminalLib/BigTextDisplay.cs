@@ -1,5 +1,6 @@
 ﻿using Sunlighter.OptionLib;
 using System.Collections.Immutable;
+using System.ComponentModel;
 
 namespace Sunlighter.GraphicsTerminalLib
 {
@@ -12,18 +13,24 @@ namespace Sunlighter.GraphicsTerminalLib
             InitializeComponent();
         }
 
+        [Browsable(true)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public string LabelText
         {
             get { return label1.Text; }
             set { label1.Text = value ?? string.Empty; }
         }
 
+        [Browsable(true)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public string ContentText
         {
             get { return textBox1.Text; }
             set { textBox1.Text = value ?? string.Empty; }
         }
 
+        [Browsable(true)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool ContentReadOnly
         {
             get { return textBox1.ReadOnly; }
@@ -36,6 +43,8 @@ namespace Sunlighter.GraphicsTerminalLib
             textBox1.SelectionStart = textBox1.Text.Length;
         }
 
+        [Browsable(true)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public MessageBoxButtons ButtonStyle
         {
             get { return buttons; }

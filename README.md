@@ -38,10 +38,10 @@ features or remedying any deficiencies. I may also add features later, depending
 
 ## Quick Start Guide
 
-First, use Visual Studio to create a console program. Right now, dot-Net 8 is supported.
+First, use Visual Studio to create a console program. Right now, dot-Net 8 and dot-Net 9 are supported.
 
-Then, edit the `.csproj` file and change the `TargetFramework` from `net8.0` to `net8.0-windows` to enable support for
-Windows Forms.
+Then, edit the `.csproj` file and change the `TargetFramework` from `net8.0` or `net9.0` to `net8.0-windows` or
+`net9.0-windows` to enable support for Windows Forms.
 
 If you don't actually want to use the Windows Console, change the `OutputType` from `Exe` to `WinExe`.
 

@@ -100,8 +100,8 @@ namespace Sunlighter.SimpleChannelLib
         private ulong nextWaitingReceiverId;
         private ImmutableSortedDictionary<ulong, ReceiverCallbackInfo> activeWaitingReceivers;
         private ImmutableList<ReceiverCallbackInfo> waitingReceivers;
-        private SenderImpl sender;
-        private ReceiverImpl receiver;
+        private readonly SenderImpl sender;
+        private readonly ReceiverImpl receiver;
 
         private sealed class ReceiverCallbackInfo
         {
@@ -310,7 +310,7 @@ namespace Sunlighter.SimpleChannelLib
 
         private sealed class SenderImpl : ISimpleChannelSender<T>
         {
-            private ChannelImpl<T> parent;
+            private readonly ChannelImpl<T> parent;
 
             public SenderImpl(ChannelImpl<T> parent)
             {
@@ -365,7 +365,7 @@ namespace Sunlighter.SimpleChannelLib
 
         private sealed class ReceiverImpl : ISimpleChannelReceiver<T>
         {
-            private ChannelImpl<T> parent;
+            private readonly ChannelImpl<T> parent;
 
             public ReceiverImpl(ChannelImpl<T> parent)
             {

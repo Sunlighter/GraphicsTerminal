@@ -426,7 +426,7 @@ namespace Sunlighter.GraphicsTerminalLib
 
     public sealed class BusyState : TerminalState
     {
-        private Option<CancellationTokenSource> cts;
+        private readonly Option<CancellationTokenSource> cts;
 
         public BusyState(Option<CancellationTokenSource> cts)
         {

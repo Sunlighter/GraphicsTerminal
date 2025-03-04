@@ -1,7 +1,5 @@
-﻿using Sunlighter.SimpleChannelLib;
-using Sunlighter.OptionLib;
-using System.Xml.Schema;
-using System.Reflection;
+﻿using Sunlighter.OptionLib;
+using Sunlighter.SimpleChannelLib;
 using System.Runtime.CompilerServices;
 
 namespace Sunlighter.GraphicsTerminalLib

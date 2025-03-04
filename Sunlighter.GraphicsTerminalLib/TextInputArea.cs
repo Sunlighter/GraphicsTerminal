@@ -1,4 +1,6 @@
-﻿namespace Sunlighter.GraphicsTerminalLib
+﻿using System.ComponentModel;
+
+namespace Sunlighter.GraphicsTerminalLib
 {
     public partial class TextInputArea : UserControl
     {
@@ -7,6 +9,8 @@
             InitializeComponent();
         }
 
+        [Browsable(true)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public string InputText
         {
             get { return textBoxInput.Text; }
