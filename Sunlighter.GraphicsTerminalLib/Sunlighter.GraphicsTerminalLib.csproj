@@ -12,13 +12,21 @@
     <AssemblyName>Sunlighter.GraphicsTerminalLib</AssemblyName>
     <Product>Sunlighter.GraphicsTerminalLib</Product>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <AssemblyVersion>1.0.3</AssemblyVersion>
-    <FileVersion>1.0.3</FileVersion>
-    <Version>1.0.3</Version>
+    <AssemblyVersion>1.0.4</AssemblyVersion>
+    <FileVersion>1.0.4</FileVersion>
+    <Version>1.0.4</Version>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <Optimize>true</Optimize>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Sunlighter.OptionLib" Version="1.0.1" />
+    <PackageReference Include="Sunlighter.OptionLib" Version="1.0.2" />
   </ItemGroup>
 
   <ItemGroup>
